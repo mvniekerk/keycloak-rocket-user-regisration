@@ -1,0 +1,64 @@
+version: '3'
+
+volumes:
+  postgres_data:
+    driver: local
+
+services:
+  postgres:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+
+  keycloak:
+    build:
+      context: ./kc
+      dockerfile: Dockerfile
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Pa55w0rd
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+      KEYCLOAK_IMPORT: /opt/jboss/keycloak/config.json -Dkeycloak.profile.feature.upload_scripts=enabled
+    ports:
+      - 8081:8080
+    depends_on:
+      - postgres
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    entrypoint: redis-server --appendonly yes
+    volumes:
+      - ./redis-data:/data
+
+  user-sms-registration:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - 8082:8080
+    depends_on:
+      - redis
+      - keycloak
+    environment:
+      REDIS_HOST: "redis://redis/"
+#      SMS_PORTAL_CLIENT_ID:
+#      SMS_PORTAL_SECRET: ""
+
+      KC_BASE: http://keycloak:8080/auth
+      KC_REALM: my-realm
+      KC_CLIENT_SECRET: 8541486f-30a6-4fea-8265-b37410a033ad
+      KC_CLIENT_ID: user-sms-registration
+

@@ -1,0 +1,33 @@
+[package]
+name = "user-sms-registration"
+version = "0.1.0"
+authors = ["Michael van Niekerk <mvniekerk@chazaqdev.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "user_registration"
+path = "src/lib.rs"
+
+[dependencies]
+rocket = "0.4.4"
+tokio = { version = "0.2.14", features = ["full"] }
+futures = "0.3.1"
+clap = "2.33.0"
+log = "0.4.8"
+uuid = { version = "0.8.1", features = ["v4"] }
+dotenv = "0.15.0"
+serde_json = "1.0.50"
+serde_derive = "1.0.105"
+serde = "1.0.105"
+redis = "0.15.1"
+chrono = { version = "0.4" }
+reqwest = { version = "0.10.4", features = ["json", "blocking"] }
+env_logger = "0.7.1"
+http = "0.2"
+
+[dependencies.rocket_contrib]
+version = "0.4.4"
+default-features = false
+features = ["json"]

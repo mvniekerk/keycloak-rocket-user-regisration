@@ -1,0 +1,7 @@
+*.md
+!README*.md
+README-secret.md
+.idea/
+*.ml
+target/
+docker/

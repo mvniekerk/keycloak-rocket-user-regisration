@@ -1,0 +1,17 @@
+{
+  "name": "userregistrationapp",
+  "displayName": "userregistration",
+  "expo": {
+    "name": "userregistration",
+    "slug": "userregistrationapp",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}

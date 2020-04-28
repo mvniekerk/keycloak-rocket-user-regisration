@@ -5,3 +5,4 @@ README-secret.md
 *.ml
 target/
 docker/
+user-registration-app/

@@ -31,7 +31,7 @@ services:
       #JDBC_PARAMS: "ssl=true"
       KEYCLOAK_IMPORT: /opt/jboss/keycloak/config.json -Dkeycloak.profile.feature.upload_scripts=enabled
     ports:
-      - 8081:8080
+      - 8083:8080
     depends_on:
       - postgres
 

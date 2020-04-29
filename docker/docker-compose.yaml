@@ -43,22 +43,22 @@ services:
     volumes:
       - ./redis-data:/data
 
-  user-sms-registration:
-    build:
-      context: ../
-      dockerfile: Dockerfile
-    ports:
-      - 8082:8080
-    depends_on:
-      - redis
-      - keycloak
-    environment:
-      REDIS_HOST: "redis://redis/"
-#      SMS_PORTAL_CLIENT_ID:
-#      SMS_PORTAL_SECRET: ""
-
-      KC_BASE: http://keycloak:8080/auth
-      KC_REALM: my-realm
-      KC_CLIENT_SECRET: 8541486f-30a6-4fea-8265-b37410a033ad
-      KC_CLIENT_ID: user-sms-registration
+#  user-sms-registration:
+#    build:
+#      context: ../
+#      dockerfile: Dockerfile
+#    ports:
+#      - 8082:8080
+#    depends_on:
+#      - redis
+#      - keycloak
+#    environment:
+#      REDIS_HOST: "redis://redis/"
+##      SMS_PORTAL_CLIENT_ID:
+##      SMS_PORTAL_SECRET: ""
+#
+#      KC_BASE: http://keycloak:8080/auth
+#      KC_REALM: my-realm
+#      KC_CLIENT_SECRET: 8541486f-30a6-4fea-8265-b37410a033ad
+#      KC_CLIENT_ID: user-sms-registration
 

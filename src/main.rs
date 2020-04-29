@@ -91,34 +91,31 @@ fn register_user(id: String, req: Json<UserCreate>) -> status::Custom<String> {
                     let registration = kc_user_registration(&jwt, &kc_registration);
                     match registration {
                         Ok(response) => {
-                            let status = response.status();
-                            let code = status.as_u16();
-                            trace!("Reg: {:}", status);
-                            if code == Status::Created.code {
-                                remove_validated_phone_number_on_redis(&id);
-                                let mut r = kc_reset_user_password(&jwt, &id, &req.password, false);
-                                if send_verification_email {
-                                    r = r.and_then(|()| kc_send_verification_email(&jwt, &id));
+                            trace!("Reg: {:}", response);
+                            remove_validated_phone_number_on_redis(&id);
+                            let mut r = kc_reset_user_password(&jwt, &id, &req.password, false);
+                            if send_verification_email {
+                                r = r.and_then(|()| kc_send_verification_email(&jwt, &id));
+                            }
+                            match r {
+                                Ok(()) => status::Custom(Status::Created, response.to_string()),
+                                Err(e) => {
+                                    let status = Status::from_code(e.status).unwrap();
+                                    status::Custom(status, e.message)
                                 }
-                                match r {
-                                    Ok(()) => status::Custom(Status::Created, "ok".to_string()),
-                                    Err(e) => {
-                                        let status = e.status().unwrap();
-                                        let status = Status::from_code(status.as_u16()).unwrap();
-                                        status::Custom(status, e.to_string())
-                                    }
-                                }
-                            } else {
-                                let error: KcErrorMessage = response.json().unwrap();
-                                info!("Error: {:?}", error);
-                                let status = Status::from_code(code).unwrap();
-                                status::Custom(status, error.error_message)
                             }
                         },
-                        Err(_) => status::Custom(Status::InternalServerError, "Server error".to_string())
+                        Err(error) => {
+                            info!("Error: {:?}", error);
+                            let status = Status::from_code(error.status).unwrap();
+                            status::Custom(status, error.message)
+                        }
                     }
                 },
-                Err(_) => status::Custom(Status::InternalServerError, "Server error".to_string())
+                Err(e) => {
+                    error!("Error getting JWT {:?}", e);
+                    status::Custom(Status::InternalServerError, "Server error".to_string())
+                }
             }
         }
     }

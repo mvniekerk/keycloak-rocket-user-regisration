@@ -19,6 +19,7 @@ ecosystem of services can be spun up by a simple `docker-compose up` command.
 ## Prerequisites
 * docker and docker-compose
 * yarn or npm
+* An SMS Portal account
 
 ## Compile and run the service in docker
 In the `docker` folder, run `docker-compose up`. The included Dockerfile will compile to

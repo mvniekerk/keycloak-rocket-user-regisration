@@ -1,6 +1,7 @@
 import { FAILURE, REQUEST, SUCCESS } from './action-type.util';
 import axios from 'axios';
-import { IRootState } from './index';
+
+let client = axios.create();
 
 export const ACTIONS = {
     SET_SERVER: 'register/SET_SERVER',
@@ -66,6 +67,7 @@ export default (state: RegisterState = initialState, action: any): RegisterState
                 cellNumber: undefined
             }
         case SUCCESS(ACTIONS.SEND_OTP):
+            console.log('Sent otp? ', action.payload)
             return {
                 ...state,
                 sendingOtpSms: false,
@@ -121,6 +123,7 @@ export default (state: RegisterState = initialState, action: any): RegisterState
                 creatingUserError: undefined
             };
         case ACTIONS.SET_SERVER:
+            client = axios.create({ baseURL: action.payload})
             return {
                 ...state,
                 registrationServer: action.payload
@@ -136,12 +139,16 @@ export const setServer = (url: string) => async dispatch =>
         payload: url
     });
 
-export const sendOtp = (number: string) => async (dispatch, getState: () => IRegisterState ) =>
-    dispatch({
+export const sendOtp = (number: string) => async (dispatch, getState: () => IRegisterState ) => {
+    const url = `/phone/register`;
+    const body = { number };
+    console.log('Going to send otp', url, body, getState().register.registrationServer);
+    return dispatch({
         type: ACTIONS.SEND_OTP,
-        payload: axios.post("/phone/register", { number }, { baseURL: getState().register.registrationServer})
-            .then(r => ({ number, uuid: r.data}))
-    });
+        payload: client.post(url, body, { headers: { 'Content-Type': 'application/json'}})
+            .then(r =>  ({ number, uuid: r.data}))
+    })
+};
 
 export const verifyOtp = (otp: string) => async (dispatch, getState: () => IRegisterState) => {
     let state = getState().register;
@@ -149,7 +156,7 @@ export const verifyOtp = (otp: string) => async (dispatch, getState: () => IRegi
     let body = { number: state.cellNumber, otp }
     return dispatch({
         type: ACTIONS.VERIFY_OTP,
-        payload: axios.put(url, body,  { baseURL: state.registrationServer})
+        payload: client.put(url, body)
             .then(r => ({otp}))
     });
 }
@@ -162,7 +169,7 @@ export const createUser = (
     let body = { username, password, first_name, last_name, email };
     return dispatch({
         type: ACTIONS.CREATE_USER,
-        payload: axios.post(url, body, { baseURL: state.registrationServer})
+        payload: client.post(url, body)
             .then(r => r.data)
     });
 }

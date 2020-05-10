@@ -149,13 +149,13 @@ fn main() {
 }
 
 fn send_otp_sms(otp: &String, number: &String) -> Result<SmsResponse, reqwest::Error>{
+    let msg = SmsMessageContent {
+            content: format!("PathfinderZA OTP {:}", otp),
+            destination: number.clone()
+        };
+    #[cfg(all(feature = "sms-portal", not(feature = "twilio")))]
     let msg = SmsMessage {
-        messages: vec![
-            SmsMessageContent {
-                content: format!("PathfinderZA OTP {:}", otp),
-                destination: number.clone()
-            }
-        ]
+        messages: vec![msg]
     };
     send_sms(&msg)
 }

@@ -10,6 +10,12 @@ edition = "2018"
 name = "user_registration"
 path = "src/lib.rs"
 
+[features]
+sms-portal = []
+twilio = []
+
+default=["twilio"]
+
 [dependencies]
 rocket = "0.4.4"
 tokio = { version = "0.2.14", features = ["full"] }

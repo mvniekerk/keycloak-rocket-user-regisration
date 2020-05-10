@@ -41,6 +41,7 @@ pub struct SmsErrorReport {
     pub faults: Vec<SmsErrorFault>
 }
 
+#[cfg(all(feature = "sms-portal", not(feature = "twilio")))]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SmsResponse {
     pub cost: f32,
@@ -57,6 +58,38 @@ pub struct SmsResponse {
     pub error_report: SmsErrorReport
 }
 
+#[cfg(all(feature = "twilio", not(feature = "sms-portal")))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SmsSubresourceUris {
+    media: String
+}
+
+#[cfg(all(feature = "twilio", not(feature = "sms-portal")))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SmsResponse {
+    account_sid: String,
+    api_version: String,
+    body: String,
+    date_created: String,
+    date_sent: String,
+    date_updated: String,
+    direction: String,
+    error_code: Option<i32>,
+    error_message: Option<String>,
+    from: String,
+    messaging_service_sid: Option<String>,
+    num_media: String,
+    num_segments: String,
+    price: Option<String>,
+    price_unit: Option<String>,
+    sid: String,
+    status: String,
+    subresource_uris: SmsSubresourceUris,
+    to: String,
+    uri: String
+}
+
+#[cfg(all(feature = "sms-portal", not(feature = "twilio")))]
 pub fn send_sms(message: &SmsMessage) -> Result<SmsResponse, reqwest::Error> {
     let sms_portal_client_id = env::var("SMS_PORTAL_CLIENT_ID")
         .expect("SMS_PORTAL_CLIENT_ID must be set");
@@ -75,5 +108,28 @@ pub fn send_sms(message: &SmsMessage) -> Result<SmsResponse, reqwest::Error> {
     client.post("https://rest.smsportal.com/v1/bulkmessages")
         .bearer_auth(jwt)
         .json(message)
+        .send()?.json()
+}
+
+#[cfg(all(feature = "twilio", not(feature = "sms-portal")))]
+pub fn send_sms(message: &SmsMessageContent) -> Result<SmsResponse, reqwest::Error> {
+    let twilio_account_ssid = env::var("TWILIO_ACCOUNT_SSID")
+        .expect("TWILIO_ACCOUNT_SSID must be set");
+    let twilio_auth_token = env::var("TWILIO_AUTH_TOKEN")
+        .expect("TWILIO_AUTH_TOKEN must be set");
+    let twilio_number = env::var("TWILIO_NUMBER_FROM")
+        .expect("TWILIO_NUMBER_FROM must be set");
+
+    let params = [
+        ("To", &message.destination),
+        ("From", &twilio_number),
+        ("Body", &message.content)
+    ];
+    let client = reqwest::blocking::Client::new();
+    let url = format!("https://api.twilio.com/2010-04-01/Accounts/{:}/Messages.json", twilio_account_ssid);
+    let url = url.as_str();
+    client.post(url)
+        .basic_auth(twilio_account_ssid, Some(twilio_auth_token))
+        .form(&params)
         .send()?.json()
 }

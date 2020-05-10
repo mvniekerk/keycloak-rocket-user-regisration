@@ -34,7 +34,7 @@ You'll need [OpenFaas deployed](https://docs.openfaas.com) and its faas-cli util
 
 The provided stack.yml file must be edited with your instances of Keycloak, Redis and the sms backend's 
 setup (either for Twilio or SMS Portal).
-The example config had a Redis instance set up (and subsequent REDIS_HOST variable set up) with Helm with:  
+The example config had a Redis instance set up (and subsequent REDIS_HOST variable set up as is) with Helm with:  
 
 ```shell script
 helm install openfaas-redis stable/redis --namespace openfaas-fn --set usePassword=false --set master.persistence.enabled=false

@@ -6,3 +6,4 @@ README-secret.md
 target/
 docker/
 user-registration-app/
+build/

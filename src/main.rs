@@ -66,7 +66,6 @@ fn phone_validate(id: String, req: Json<PhoneOtpReply>) -> status::Custom<String
             } else {
                 status::Custom(Status::BadRequest, "false".to_string())
             }
-
         },
         Err(_) => {
             status::Custom(Status::BadRequest, "false".to_string())

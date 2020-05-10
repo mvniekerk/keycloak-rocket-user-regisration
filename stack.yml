@@ -7,15 +7,18 @@ functions:
         lang: dockerfile
         handler: ./
         image: gcr.io/amapogotagview/user-registration:latest
+        build_args:
+#            SMS_BACKEND: smsportal
+            SMS_BACKEND: twilio
         environment:
             REDIS_HOST: redis://openfaas-fn-redis-master
 
-            TWILIO_ACCOUNT_SSID:
-            TWILIO_AUTH_TOKEN:
-            TWILIO_NUMBER_FROM:
+#            TWILIO_ACCOUNT_SSID:
+#            TWILIO_AUTH_TOKEN:
+#            TWILIO_NUMBER_FROM:
 
-            SMS_PORTAL_CLIENT_ID:
-            SMS_PORTAL_SECRET:
+#            SMS_PORTAL_CLIENT_ID:
+#            SMS_PORTAL_SECRET:
 
             KC_BASE:
             KC_REALM:

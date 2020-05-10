@@ -1,10 +1,13 @@
+# Can be twilio or smsportal
 FROM openfaas/of-watchdog:0.7.7-x86_64 as watchdog
 FROM rustlang/rust:nightly-stretch as build
+ARG SMS_BACKEND=twilio
+ENV SMS_BACKEND ${SMS_BACKEND}
 WORKDIR /workspace
 RUN mkdir -p /workspace/src && touch /workspace/src/main.rs
 COPY . /workspace/
 
-RUN cargo +nightly build --release --features
+RUN echo "Building for backend $SMS_BACKEND" && cargo +nightly build --release --features $SMS_BACKEND
 
 FROM debian:9-slim
 
@@ -13,9 +16,6 @@ RUN apt-get update \
     && apt-get clean && apt-get autoclean && rm -rf /var/cache/apt/archives/
 
 RUN addgroup --system app && adduser --system app
-
-#COPY --from=api-site /usr/bin/function /usr/bin/function
-
 COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
 
 USER app

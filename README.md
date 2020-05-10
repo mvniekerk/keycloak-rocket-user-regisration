@@ -19,14 +19,36 @@ ecosystem of services can be spun up by a simple `docker-compose up` command.
 ## Prerequisites
 * docker and docker-compose
 * yarn or npm
-* An SMS Portal account
+* An SMS Portal account or a Twilio account and a Twilio phone number
 
 ## Compile and run the service in docker
 In the `docker` folder, run `docker-compose up`. The included Dockerfile will compile to
-an image that can be run on OpenFaas or Knative.
+an image that can be run on OpenFaas or Knative. Note the options in the docker-compose.yml file (see section
+ "Service Configuration").
 
 You can reach the Keycloak instance on http://localhost:8083 (username admin, password Pa55w0rd).
 The registration service can be reached on http://localhost:8082
+
+## Run as an OpenFaas function
+You'll need [OpenFaas deployed](https://docs.openfaas.com) and its faas-cli utility installed.
+
+The provided stack.yml file must be edited with your instances of Keycloak, Redis and the sms backend's 
+setup (either for Twilio or SMS Portal).
+The example config had a Redis instance set up (and subsequent REDIS_HOST variable set up) with Helm with:  
+
+```shell script
+helm install openfaas-redis stable/redis --namespace openfaas-fn --set usePassword=false --set master.persistence.enabled=false
+``` 
+
+To just build it:
+```shell script
+faas-cli build -f stack.yml
+``` 
+
+To deploy it:
+```shell script
+faas-cli up -f stack.yml
+```
 
 ## Run the expo.io / React native client
 * Install expo.io with `yarn global add expo-cli` or `npm install -g expo-cli`

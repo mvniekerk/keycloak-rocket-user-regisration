@@ -47,6 +47,9 @@ services:
     build:
       context: ../
       dockerfile: Dockerfile
+      args:
+#        SMS_BACKEND: smsportal
+        SMS_BACKEND: twilio
     ports:
       - 8082:8080
     depends_on:

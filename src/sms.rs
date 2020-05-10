@@ -41,7 +41,7 @@ pub struct SmsErrorReport {
     pub faults: Vec<SmsErrorFault>
 }
 
-#[cfg(all(feature = "sms-portal", not(feature = "twilio")))]
+#[cfg(all(feature = "smsportal", not(feature = "twilio")))]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SmsResponse {
     pub cost: f32,
@@ -58,13 +58,13 @@ pub struct SmsResponse {
     pub error_report: SmsErrorReport
 }
 
-#[cfg(all(feature = "twilio", not(feature = "sms-portal")))]
+#[cfg(all(feature = "twilio", not(feature = "smsportal")))]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SmsSubresourceUris {
     media: String
 }
 
-#[cfg(all(feature = "twilio", not(feature = "sms-portal")))]
+#[cfg(all(feature = "twilio", not(feature = "smsportal")))]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SmsResponse {
     account_sid: String,
@@ -89,7 +89,7 @@ pub struct SmsResponse {
     uri: String
 }
 
-#[cfg(all(feature = "sms-portal", not(feature = "twilio")))]
+#[cfg(all(feature = "smsportal", not(feature = "twilio")))]
 pub fn send_sms(message: &SmsMessage) -> Result<SmsResponse, reqwest::Error> {
     let sms_portal_client_id = env::var("SMS_PORTAL_CLIENT_ID")
         .expect("SMS_PORTAL_CLIENT_ID must be set");
@@ -111,7 +111,7 @@ pub fn send_sms(message: &SmsMessage) -> Result<SmsResponse, reqwest::Error> {
         .send()?.json()
 }
 
-#[cfg(all(feature = "twilio", not(feature = "sms-portal")))]
+#[cfg(all(feature = "twilio", not(feature = "smsportal")))]
 pub fn send_sms(message: &SmsMessageContent) -> Result<SmsResponse, reqwest::Error> {
     let twilio_account_ssid = env::var("TWILIO_ACCOUNT_SSID")
         .expect("TWILIO_ACCOUNT_SSID must be set");

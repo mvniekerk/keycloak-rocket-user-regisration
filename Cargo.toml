@@ -11,10 +11,8 @@ name = "user_registration"
 path = "src/lib.rs"
 
 [features]
-sms-portal = []
+smsportal = []
 twilio = []
-
-default=["twilio"]
 
 [dependencies]
 rocket = "0.4.4"

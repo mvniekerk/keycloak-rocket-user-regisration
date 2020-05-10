@@ -11,17 +11,18 @@ use clap::{App, Arg};
 use dotenv::dotenv;
 use std::env;
 
-use user_registration::sms::{SmsResponse, SmsMessage, SmsMessageContent, send_sms};
+use user_registration::sms::{SmsResponse, SmsMessageContent, send_sms};
+#[cfg(feature = "smsportal")]
+use user_registration::sms::SmsMessage;
 use user_registration::redis::*;
 use user_registration::*;
 use rocket_contrib::json::Json;
 use rocket::response::status;
 use user_registration::keycloak::*;
-use std::net::ToSocketAddrs;
 use rocket::http::Status;
 
 #[post("/register", format = "json", data = "<req>")]
-fn register_phone(req: Json<PhoneRequest>) -> String {
+fn register_phone(req: Json<PhoneRequest>) -> status::Custom<String> {
     info!("Hello {:?}", req);
     let uuid = uuid::Uuid::new_v4();
 
@@ -39,9 +40,15 @@ fn register_phone(req: Json<PhoneRequest>) -> String {
     info!("{:?} OTP {:?}", req.number, otp);
     let uuid = uuid.to_string();
     let phone = &req.number;
-    put_phone_on_redis(&otp, &uuid, &phone);
-    send_otp_sms(&otp, &req.number);
-    uuid
+    if let Err(e) = put_phone_on_redis(&otp, &uuid, &phone) {
+        error!("Got an error putting phone on redis {:?}", e);
+        return status::Custom(Status::InternalServerError, "Caching".to_string())
+    }
+    if let Err(e) = send_otp_sms(&otp, &req.number) {
+        error!("Got an error sending OTP sms: {:?}", e);
+        return status::Custom(Status::InternalServerError, "SMS".to_string())
+    }
+    status::Custom(Status::Ok, uuid)
 }
 
 #[put("/register/<id>", format = "json", data = "<req>")]
@@ -50,8 +57,12 @@ fn phone_validate(id: String, req: Json<PhoneOtpReply>) -> status::Custom<String
     match matches {
         Ok(v) => {
             if v {
-                put_validated_phone_number_on_redis(&id, &req.number);
-                status::Custom(Status::Ok, "true".to_string())
+                if let Err(e) = put_validated_phone_number_on_redis(&id, &req.number) {
+                    error!("Error phone validation on redis {:?}", e);
+                    status::Custom(Status::InternalServerError, "Caching".to_string())
+                } else {
+                    status::Custom(Status::Ok, "true".to_string())
+                }
             } else {
                 status::Custom(Status::BadRequest, "false".to_string())
             }
@@ -67,7 +78,7 @@ fn phone_validate(id: String, req: Json<PhoneOtpReply>) -> status::Custom<String
 fn register_user(id: String, req: Json<UserCreate>) -> status::Custom<String> {
     // Default Keycloak setup doesn't have a proper sending email set up. This will fail if not set up correctly.
     let send_verification_email: bool = env::var("KC_SEND_VERIFICATION_EMAIL")
-        .unwrap_or("false".to_string()).parse().unwrap();
+        .unwrap_or_else(|_| "false".to_string()).parse().unwrap();
 
     let number = number_for_uuid(&id);
 
@@ -77,7 +88,7 @@ fn register_user(id: String, req: Json<UserCreate>) -> status::Custom<String> {
             match kc_client_jwt() {
                 Ok(jwt) => {
                     let mut m = std::collections::HashMap::new();
-                    m.insert("cellphone".to_string(), number.clone());
+                    m.insert("cellphone".to_string(), number);
                     m.insert("reg_uuid".to_string(), id.clone());
                     let kc_registration = KcRegistration {
                         enabled: true,
@@ -92,13 +103,15 @@ fn register_user(id: String, req: Json<UserCreate>) -> status::Custom<String> {
                     match registration {
                         Ok(response) => {
                             trace!("Reg: {:}", response);
-                            remove_validated_phone_number_on_redis(&id);
+                            if let Err(e) = remove_validated_phone_number_on_redis(&id) {
+                                error!("Error removing validated phone number on redis {:?}", e);
+                            }
                             let mut r = kc_reset_user_password(&jwt, &id, &req.password, false);
                             if send_verification_email {
                                 r = r.and_then(|()| kc_send_verification_email(&jwt, &id));
                             }
                             match r {
-                                Ok(()) => status::Custom(Status::Created, response.to_string()),
+                                Ok(()) => status::Custom(Status::Created, response),
                                 Err(e) => {
                                     let status = Status::from_code(e.status).unwrap();
                                     status::Custom(status, e.message)
@@ -141,20 +154,22 @@ fn main() {
         )
         .get_matches();
     setup_log(matches.occurrences_of("verbose"));
-    dotenv();
+    if let Err(e) = dotenv() {
+        error!("Error setting up .env {:?}", e);
+    }
 
     rocket::ignite()
         .mount("/phone", routes![register_phone, phone_validate])
         .mount("/user", routes![register_user]).launch();
 }
 
-fn send_otp_sms(otp: &String, number: &String) -> Result<SmsResponse, reqwest::Error>{
+fn send_otp_sms(otp: &str, number: &str) -> Result<SmsResponse, reqwest::Error>{
     let msg = SmsMessageContent {
-            content: format!("PathfinderZA OTP {:}", otp),
-            destination: number.clone()
-        };
-    #[cfg(all(feature = "sms-portal", not(feature = "twilio")))]
-    let msg = SmsMessage {
+        content: format!("PathfinderZA OTP {:}", otp),
+        destination: number.to_string()
+    };
+    #[cfg(all(feature = "smsportal", not(feature = "twilio")))]
+        let msg = SmsMessage {
         messages: vec![msg]
     };
     send_sms(&msg)

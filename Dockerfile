@@ -4,7 +4,7 @@ WORKDIR /workspace
 RUN mkdir -p /workspace/src && touch /workspace/src/main.rs
 COPY . /workspace/
 
-RUN cargo +nightly build --release
+RUN cargo +nightly build --release --features
 
 FROM debian:9-slim
 

@@ -1,5 +1,4 @@
 use std::env;
-use reqwest::header::HeaderMap;
 use reqwest::{Error, StatusCode};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -111,14 +110,14 @@ pub struct KcError {
 impl From<reqwest::Error> for KcError {
     fn from(e: Error) -> Self {
         KcError {
-            status: e.status().unwrap_or(StatusCode::from_u16(500).unwrap()).as_u16(),
+            status: e.status().unwrap_or_else(|| StatusCode::from_u16(500).unwrap()).as_u16(),
             message: e.to_string()
         }
     }
 }
 
 
-pub fn kc_user_registration(jwt: &String, user: &KcRegistration) -> Result<String, KcError> {
+pub fn kc_user_registration(jwt: &str, user: &KcRegistration) -> Result<String, KcError> {
     let kc_base = env::var("KC_BASE")
         .expect("KC_BASE must be set");
     let kc_realm = env::var("KC_REALM")
@@ -153,7 +152,7 @@ pub fn kc_user_registration(jwt: &String, user: &KcRegistration) -> Result<Strin
     Ok(user.id)
 }
 
-pub fn kc_reset_user_password(jwt: &String, uuid: &String, password: &String, temporary: bool) -> Result<(), KcError> {
+pub fn kc_reset_user_password(jwt: &str, uuid: &str, password: &str, temporary: bool) -> Result<(), KcError> {
 
     let kc_base = env::var("KC_BASE")
         .expect("KC_BASE must be set");
@@ -164,7 +163,7 @@ pub fn kc_reset_user_password(jwt: &String, uuid: &String, password: &String, te
 
     let json = KcPasswordReset {
         password_type: "Password".to_string(),
-        value: password.clone(),
+        value: password.to_string(),
         temporary
     };
 
@@ -177,7 +176,7 @@ pub fn kc_reset_user_password(jwt: &String, uuid: &String, password: &String, te
     Ok(())
 }
 
-pub fn kc_send_verification_email(jwt: &String, uuid: &String) -> Result<(), KcError> {
+pub fn kc_send_verification_email(jwt: &str, uuid: &str) -> Result<(), KcError> {
     let kc_base = env::var("KC_BASE")
         .expect("KC_BASE must be set");
     let kc_realm = env::var("KC_REALM")

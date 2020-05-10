@@ -54,8 +54,13 @@ services:
       - keycloak
     environment:
       REDIS_HOST: "redis://redis/"
+
 #      SMS_PORTAL_CLIENT_ID:
 #      SMS_PORTAL_SECRET: ""
+
+#      TWILIO_ACCOUNT_SSID: ""
+#      TWILIO_AUTH_TOKEN: ""
+#      TWILIO_NUMBER_FROM: ""
 
       KC_BASE: http://keycloak:8080/auth
       KC_REALM: my-realm

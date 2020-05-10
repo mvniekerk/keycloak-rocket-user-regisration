@@ -64,6 +64,9 @@ The docker-compose setup already has these set up (except the SMS_PORTAL_* setti
 | REDIS_HOST                 | "redis://127.0.0.1/"                 | The Redis host to connect to to do the TTL OTP with |
 | SMS_PORTAL_CLIENT_ID       |                                      | SMS portal client ID |
 | SMS_PORTAL_SECRET          |                                      | SMS portal secret    |
+| TWILIO_ACCOUNT_SSID        |                                      | Twilio account SSID |
+| TWILIO_AUTH_TOKEN          |                                      | Twilio authentication token |
+| TWILIO_NUMBER_FROM         |                                      | Twilio number you're sending from |
 | KC_BASE                    | http://localhost:8083/auth           | Keycloak base URL    |
 | KC_REALM                   | my-realm                             | Realm to register user with |
 | KC_CLIENT_SECRET           | 8541486f-30a6-4fea-8265-b37410a033ad | Client secret for realm |

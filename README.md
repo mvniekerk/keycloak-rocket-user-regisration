@@ -59,6 +59,9 @@ the app on your device
 
 
 ## Curl examples
+
+These commands assume you're running the service using `docker-compose`.
+
 * Send the OTP:
 ```shell script
 curl -v -X POST -d '{"number":"<my number>"}' \
